@@ -4,4 +4,4 @@
 
 Pickle file created in the IR_DataCollection_Preprocessing named as "NewsData" has been renamed as 'inShorts-API_NewsData_13th March 2023'
 It contains the dataframe made from calling the inShorts API. [Future work] 
-
+https://docs.inshorts.me/ 
