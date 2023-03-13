@@ -1,5 +1,5 @@
 # Project-IR
-Group 49
+Group 49 : Feedback based news recommendation system
 
 Sakshi Sinha (MT22121) 
 Shambhavi Pathak (MT22067) 
