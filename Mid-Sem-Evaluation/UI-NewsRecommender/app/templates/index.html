@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Netflix Recommendation System</title>
+	<link rel="stylesheet" href="../static/stylesheets/style.css" />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="../static/js/multiselect.min.js"></script>
+	<link rel="stylesheet" href="../static/stylesheets/multiselect.css"> 
+</head>
+<body>
+	<!-- <img src="../static/stylesheets/logo.svg" /> -->
+	<div class="content" style=" font-size: 30px;">
+	<h1>News Recommendation System</h1>	
+		<form name="passdata" action="/about" method="post">
+			<p1 style="color:black !important; background-color: rgba(255,255,255,0.5); border-radius: 10px;">Select 1 category that you like: </p1>
+			<select name="category" id="category">
+				{% for cat in category %}
+				<option value= "{{cat}}">{{category[cat]}}</option>"
+				{% endfor %}
+			</select>
+			<br>
+			<br>
+			<input type="submit" value="Get Started">
+		</form>
+	</div>
+	<script>
+		$('#category').multiselect({
+			columns: 1,
+			placeholder: 'Select Category',
+			search: true,
+			selectAll: true
+		});
+	</script>
+</body>
+</html>
