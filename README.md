@@ -1,8 +1,7 @@
 # Project-IR
-Group 49 : Feedback based news recommendation system
+Group 49 : Introducing Diversification in News Recommendation System
 
-Sakshi Sinha (MT22121) 
-Shambhavi Pathak (MT22067) 
-Debnath Kundu (MT22026)
-Snehal Buldeo (MT22074)
+Shambhavi Pathak (MT22067) <br />
+Debnath Kundu (MT22026) <br />
+Snehal Buldeo (MT22074) <br />
 Samiksha Garg (MT21074)
