@@ -56,14 +56,13 @@ filename = 'tf-idf_vectorizer features_inshorts.sav'
 tfidf_vectorizer_features = pickle.load(open(filename,'rb'))
 
 # Function to calculate cosine similarity of one vs all 
-def tfidf_based_model(row_index, num_similar_items):
-    couple_dist = cosine_similarity(tfidf_vectorizer_features,tfidf_vectorizer_features[row_index])
-    indices = np.argsort(couple_dist.ravel())[0:num_similar_items]
-    
-    return indices
-# Function to diversify the recommended list
 
-def diversify(recommended_list, thresh):
+def tfidf_based_model(row_index, num_similar_items,cs_given):
+    couple_dist = cs_given[row_index]
+    indices = np.argsort(couple_dist.ravel())[0:num_similar_items]
+    return indices
+
+def diversify(recommended_list, thresh,cs):
 
   # initializing the diversified list
   diversified_list = []
@@ -82,7 +81,7 @@ def diversify(recommended_list, thresh):
     diversity_values = []
     #compute diversity metric of each ele in candidate temp wrt all items in diversified list
     for ele in candidate_temp:
-      t = (1-cosine_similarity_ova(ele,diversified_list),ele)
+      t = (1-cosine_similarity_ova(ele,diversified_list,cs),ele)
       diversity_values.append(t)
 
     #sort the diversity score in reverse
@@ -97,6 +96,7 @@ def diversify(recommended_list, thresh):
     for i in range(len(candidate_temp)):
       pos_og = recommended_list.index(candidate_temp[i])
       pos_div = list1[candidate_temp[i]]
+      # pos_div = diversity_values.index(candidate_list[i])
       w = ( (pos_og*(1-thresh)) + (pos_div)*thresh, candidate_temp[i] )
       weights.append(w)
 
@@ -107,32 +107,34 @@ def diversify(recommended_list, thresh):
 
   return diversified_list
 
-def cosine_similarity_ova (one, all):
+# Function to calculate cosine similarity of one vs all 
+def cosine_similarity_ova (one, all,cs):
   sum = 0
   n = len(all)
-  for item in all:
-    sum += cosine_similarity(tfidf_vectorizer_features[one], tfidf_vectorizer_features[item])[0][0]
-
-  cs = sum/n
-  return cs
-
+  cs_list = cs[one][all]
+  for item in cs_list:
+    sum += item
+  c = sum/n
+  return c
 
 # Function to calculate ILD
 
-def ILD(li):
+def ILD(li,cs):
   sum = 0
   n = len(li)
 
   for i in range(len(li)):
-    for j in range(len(li)):
-      sum += cosine_similarity(tfidf_vectorizer_features[li[i]],tfidf_vectorizer_features[li[j]])[0][0]
+    for j in range(i):
+      if(i!=j):
+        sum += cs[li[i]][li[j]]
+
   ILD = sum/(n*(n-1))
 
   return (1-ILD)
 
 # Defining function for final recommendations
 
-def recommend(is_diverse, article_id):
+def helper(is_diverse, article_id,cs,cs_given):
 
   if(is_diverse not in [0,1]):
     raise Exception("Wrong value of is_diverse! Enter 0 or 1 as is_dierse")
@@ -140,26 +142,42 @@ def recommend(is_diverse, article_id):
   if(article_id <0 or article_id>815):
     raise Exception("Wrong value of article_id! Enter value between 0 to815")
 
-  top_50 =  list(tfidf_based_model(article_id, 50))
+  top_200 =  list(tfidf_based_model(article_id, 200,cs_given))
 
   if(is_diverse == 0):
     
-    recomm_list = top_50[:10]
-    ild = ILD(recomm_list)
+    recomm_list = top_200[:10]
+    ild = ILD(recomm_list,cs)
     return recomm_list, ild
 
   elif(is_diverse ==1):
-    recomm_list = diversify(top_50,0.85)
+    recomm_list = diversify(top_200,0.9,cs)
 
     # check
     if (len(recomm_list) !=10):
       for i in range(10-len(recomm_list)):
-        recomm_list.sppend(top_50[-i])
-    ild = ILD(recomm_list[:10])
+        recomm_list.sppend(top_200[-i])
+    ild = ILD(recomm_list[:10],cs)
     return recomm_list, ild
 
+# Defining function for final recommendations
 
-file = open('Copy of dataset_preprocessed.pkl', 'rb')
+def recommend(is_diverse, article_id):
+
+
+  col_extracted = ['TextBlob_Subjectivity', 'TextBlob_Polarity','TextBlob_Analysis','topic'] 
+  col_given = news_articles_with_features.columns[:520].tolist()
+  col_given.append('category')
+  cs_given = cosine_similarity(news_articles_with_features[col_given])
+  cs = cosine_similarity(news_articles_with_features[col_extracted])
+
+  recomm_list, ild = helper(is_diverse, article_id, cs, cs_given)
+  return recomm_list, ild
+  
+news_articles_with_features = pd.read_pickle('dataset_features.pkl')
+file = open('dataset_preprocessed.pkl', 'rb')
+
+# file=news_articles_with_features
 data = pickle.load(file)
 file.close()
 
@@ -170,10 +188,10 @@ data_pd.set_index("index", inplace = True)
 def get_recommendations_data(id=None):
     if id:
         r=id    
-        recommended_list,ild=recommend(1,r)
+        recommended_list,ild=recommend(1,int(r))
     else:
         r = random.randint(1, 814)
-        recommended_list,ild=recommend(0,r)
+        recommended_list,ild=recommend(0,int(r))
     
     out_data=[]
     for d in recommended_list:
@@ -189,7 +207,7 @@ app = Flask(__name__)
 def index():
     session['user_id']=uuid.uuid1()
     out_data,ild=get_recommendations_data()
-    threshold=0.85
+    threshold=0.55
     return render_template('result.html', out_data = out_data,ild=ild,threshold=threshold) 
 
 
@@ -206,7 +224,7 @@ def recommend_page(article_id):
     file.close()
     
     out_data,ild=get_recommendations_data(int(article_id))
-    threshold=0.85
+    threshold=0.70
     return render_template('result.html', out_data = out_data,ild=ild,threshold=threshold) 
 
 if __name__ == '__main__':
