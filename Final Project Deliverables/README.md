@@ -1,7 +1,8 @@
 Instructions to run the application:
 
 app.py : Main source code file</br>
-requirements.txt : consists of a list of packages along with their versions, necessary dependencies to run our Flask application
+requirements.txt : consists of a list of packages along with their versions, necessary dependencies to run our Flask application</br>
+data.csv : Stores the click-stream data of user like timestamp, article id user interacted with and category
 
 Two ways to open the application on web browser:
 </br>
